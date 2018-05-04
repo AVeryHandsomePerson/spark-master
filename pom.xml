@@ -13,8 +13,8 @@
         <encoding>UTF-8</encoding>
         <scala.version>2.11.8</scala.version>
         <spark.version>2.2.0</spark.version>
-        <hadoop.version>2.7.3</hadoop.version>
-        <es.version>2.3.1</es.version>
+        <!--<hadoop.version>2.7.2</hadoop.version>-->
+        <!--<es.version>2.3.1</es.version>-->
         <elasticsearchSpark.version>5.4.1</elasticsearchSpark.version>
     </properties>
 
@@ -52,11 +52,11 @@
             <artifactId>spark-sftp_2.10</artifactId>
             <version>1.0.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.elasticsearch</groupId>
-            <artifactId>elasticsearch</artifactId>
-            <version>2.4.2</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.elasticsearch</groupId>-->
+            <!--<artifactId>elasticsearch</artifactId>-->
+            <!--<version>2.4.2</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch-spark-20_2.11</artifactId>
@@ -87,6 +87,14 @@
             </execution>
         </executions>
     </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+            </configuration>
+        </plugin>
     </plugins>
     </build>
 </project>

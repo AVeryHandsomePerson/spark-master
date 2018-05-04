@@ -7,10 +7,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="aaaaa" />
+        <module name="spark-master" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="aaaaa" target="1.7" />
+      <module name="spark-master" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

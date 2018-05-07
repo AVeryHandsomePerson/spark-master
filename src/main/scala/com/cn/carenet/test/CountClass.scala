@@ -58,4 +58,9 @@ object CountClass {
   def check(data: RDD[Vector]) = {
     (5 to 40 by 5).map(k => (k, CountClass.clusteringScore(data, k))).foreach(println)
   }
+
+  def main(args: Array[String]): Unit = {
+    val map =Map(1 -> "2")
+    println(map.valuesIterator.toList(0))
+  }
 }

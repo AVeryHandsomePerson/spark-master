@@ -3,6 +3,7 @@ package com.cn.carenet.function
 
 
 import org.apache.spark.ml.clustering.LDA
+import org.apache.spark.ml.feature.Bucketizer
 import org.apache.spark.mllib.linalg.{Matrix, Vectors}
 import org.apache.spark.mllib.stat.Statistics
 import org.apache.spark.sql.{Row, SQLContext, SparkSession}
@@ -18,9 +19,12 @@ object Basicstatistics {
     val obs=data.map(x=>Vectors.dense(x))
     val summary=Statistics.colStats(obs)
 
-    println(summary.mean)
-    println(summary.max)
-    println(summary.min)
+    println("max is " + summary.max)
+    println("min is " + summary.min)
+    println("mean is " + summary.mean)
+    println("variance is " + summary.variance)
+    println("normL1 is " + summary.normL1)
+    println("normL2 is " + summary.normL2)
 
   }
 
@@ -144,6 +148,7 @@ object Basicstatistics {
 
 
   /**
+    * LDA
     * 加载了表示文档语料库的字数统计向量。然后，我们使用LDA 从文档中推断出三个主题。
     * 所需簇的数量传递给算法。然后，我们输出主题，表示为词的概率分布。
     */
@@ -152,17 +157,24 @@ object Basicstatistics {
 //    val sc =new SparkContext(sparkConf)
 //    val rdd =sc.textFile("D:\\IDEARFILE\\aaaaa\\file\\sample_lda_data.txt")
 //    val vect = rdd.map(s => Vectors.dense(s.trim.split(" ").map(x => x.toDouble)))
-//    //    val corpuss= vect.zipWithIndex().map(_.swap)
+    // 此处利用zipWithIndex()将vector与vector在RDD的索引组成键值对，并通过swap()调转索引及词向量 并缓存起来
 //    val corpus= vect.zipWithIndex().map(_.swap).cache()
-
+    // 3 建立模型，设置训练参数，训练模型
     /**
       * k: 主题数，或者聚类中心数
       * DocConcentration：文章分布的超参数(Dirichlet分布的参数)，必需>1.0
       * TopicConcentration：主题分布的超参数(Dirichlet分布的参数)，必需>1.0
       * MaxIterations：迭代次数
-      * setSeed：随机种子
+      * Seed：随机种子
       * CheckpointInterval：迭代计算时检查点的间隔
       * Optimizer：优化计算方法，目前支持"em", "online"
+      * *
+      * 可在创建lda模型时创建
+      * ldaModel = new lda().setK(5).setSeed(5).setDocConcentration(5);
+      * *
+      * 也可以通过lda模型获取
+      *ldaModel.getK();
+      *
       */
     // Cluster the documents into three topics using LDA
 //    val ldaModel = new LDA().setK(3).run(corpus)
@@ -186,30 +198,64 @@ object Basicstatistics {
 //      }
 //      println()
 //    }
+//    ldaModel.save(sc, modelPath)
 
     val spark =SparkSession.builder().appName("Basicstatistics").master("local[*]").getOrCreate()
     // Loads data.  转换为 libsvm 格式数据
+    //加载数据，数据是标签向量。标签可以看作是文档序号。文档格式为:   文档序号  矩阵列序号:文档中的单词
     val dataset = spark.read.format("libsvm").load("D:\\IDEARFILE\\aaaaa\\file\\sample_lda_libsvm_data.txt")
     // Trains a LDA model.
+    // 训练lda模型
     val lda = new LDA().setK(10).setMaxIter(10)
     val model = lda.fit(dataset)
-    //
+    // log likelihood，越大越好。
     val ll = model.logLikelihood(dataset)
+    // Perplexity评估，越小越好
     val lp = model.logPerplexity(dataset)
     println(s"The lower bound on the log likelihood of the entire corpus: $ll")
     println(s"The upper bound bound on perplexity: $lp")
 
+    val matrix = model.topicsMatrix
+    println("------------------------");
+    println("矩阵topics列为主题，总共有" + matrix.numCols + "主题");
+    println("矩阵topics行为单词，总共有" + matrix.numRows + "单词");
+    println("矩阵topics表示的是每个单词在每个主题中的权重");
+    for (topic <- Range(0, 3)) {
+      print("Topic " + topic + ":")
+      for (word <- Range(0, model.vocabSize)) {
+        print(" " + matrix(word, topic)); // 根据列 下标  和 值下标 去出矩阵数据
+      }
+      println()
+    }
     // Describe topics.
+    // 描述主题只展示概率前三的单词
     val topics = model.describeTopics(3)
     println("The topics described by their top-weighted terms:")
     topics.show(false)
     // Shows the result.
+    // 对文档进行聚类，并展示主题分布结果。lable表示的是文档的序号
     val transformed = model.transform(dataset)
     transformed.show(false)
+    spark.stop()
   }
+  //分段处理
+  def Segmentprocessing(): Unit ={
+    val spark =SparkSession.builder().appName("Basicstatistics").master("local[*]").getOrCreate()
+   val df = spark.read.json("D:\\IDEARFILE\\aaaaa\\file\\people.json")
+    //根据条件拆分 0 - 15 范围
+    val arr = Array(0,15,Double.PositiveInfinity)
+//    val arrs = Array("age","name")
+
+    val bucketDf = new Bucketizer().setInputCol("age").setOutputCol("abc").setSplits(arr).transform(df)
+
+  }
+
+
+
 
   def main(args: Array[String]): Unit = {
 //    val spark = SparkSession.builder().master("local[*]").appName("Basicstatistics").getOrCreate()
-    llss()
+//    llss()
+
   }
 }

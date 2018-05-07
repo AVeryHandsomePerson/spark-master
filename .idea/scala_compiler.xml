@@ -9,7 +9,6 @@
     </profile>
     <profile name="Maven 2" modules="spark-master">
       <parameters>
-
         <parameter value="-dependencyfile" />
         <parameter value="D:\IDEARFILE\aaaaa\target/.scala_dependencies" />
       </parameters>

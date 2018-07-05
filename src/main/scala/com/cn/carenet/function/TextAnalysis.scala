@@ -1,7 +1,14 @@
 package com.cn.carenet.function
 
 import java.io.StringReader
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Date
 
+import org.apache.commons.lang3.time.DateUtils
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.Path
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
 import org.apache.spark.ml.feature.{HashingTF, IDF, Tokenizer}
 import org.apache.spark.sql.SparkSession
@@ -46,20 +53,48 @@ object TextAnalysis{
     rescaledData.select("features", "label").take(3).foreach(println)
 //    val model = NaiveBayes.train(trainDataRdd, lambda = 1.0, modelType = "multinomial")
   }
-  def ChineseWordSegmentation(): Unit ={
-    val str = "lxw的大数据田地 -- lxw1234.com 专注Hadoop、Spark、Hive等大数据技术博客。 北京优衣库"
-    val analyzer = new IKAnalyzer(false)
-    val reader = new StringReader(str)
-    val ts = analyzer.tokenStream("", reader)
-    val term = ts.getAttribute(classOf[CharTermAttribute])
-    ts.reset()
-    while(ts.incrementToken()){
-      System.out.print(term.toString()+"|");
-    }
-    analyzer.close
-  }
+//  def ChineseWordSegmentation(): Unit ={
+//    val str = "lxw的大数据田地 -- lxw1234.com 专注Hadoop、Spark、Hive等大数据技术博客。 北京优衣库"
+//    val analyzer = new IKAnalyzer(false)
+//    val reader = new StringReader(str)
+//    val ts = analyzer.tokenStream("", reader)
+//    val term = ts.getAttribute(classOf[CharTermAttribute])
+//    ts.reset()
+//    while(ts.incrementToken()){
+//      System.out.print(term.toString()+"|");
+//    }
+//    analyzer.close
+//  }
   def main(args: Array[String]): Unit = {
-    ids
+//  var day = LocalDate.of(2018,4,16)
+//  val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+//  var days = day.plusDays(6).format(formatter)
+//  var dayss = day.plusDays(7)
+//  var daysss =day.plusMonths(1)
+//  println(daysss)
+val hadoopConf=new Configuration()
+  val hdfs= org.apache.hadoop.fs.FileSystem.get(hadoopConf)
+  val realPath=new Path("hdfs://master01:8020/source/1/a")
+  if(hdfs.exists(realPath)){
+    //println("------------")
+    hdfs.delete(realPath,true)
+    //println()
+    //println("------------")
+  }
+//  val spark = SparkSession.builder().master("local[*]").appName("TextAnalysis").getOrCreate()
+
+//  var sdf: SimpleDateFormat  = new SimpleDateFormat("yyyyMMddhhmmss")
+//  var date: Long = sdf.parse("20180626104606").getTime
+//  var dates: Long =  sdf.parse("20180626101258").getTime
+//  println((date-dates)/60000)
+
+
+
+//  val str = spark.sparkContext.textFile("D:\\IDEARFILE\\aaaaa\\file\\2018.06.26.10.evt")
+//  str.map(_.split("\\|",-1)).filter(x => {
+//    if(x(1).equals("ZTE")) 1  else  true
+//  })
+
   }
 
 }

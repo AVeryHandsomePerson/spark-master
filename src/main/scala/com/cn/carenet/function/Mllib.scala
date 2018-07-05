@@ -4,13 +4,13 @@ package com.cn.carenet.function
 import org.apache.spark.ml.{Pipeline, PipelineModel}
 import org.apache.spark.ml.classification.LogisticRegression
 import org.apache.spark.ml.feature.{HashingTF, Tokenizer}
-
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.tree.RandomForest
 import org.apache.spark.mllib.tree.model.RandomForestModel
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.sql.{Row, SparkSession}
+
 
 object Mllib {
   def Mllib01(): Unit ={
@@ -23,6 +23,7 @@ object Mllib {
       (0.0, Vectors.dense(2.0, 1.3, 1.0)),
       (1.0, Vectors.dense(0.0, 1.2, -0.5))
     )).toDF("label", "features")
+
     // Create a LogisticRegression instance. This instance is an Estimator.
     //创建一个LogisticRegression实例。 这个实例是一个Estimator。
     val lr = new LogisticRegression()

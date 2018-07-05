@@ -109,14 +109,13 @@ object Basicstatistics {
     * 如果distinct值特别多的情况下，仅仅是去重就是一个巨大的运算负担，更别说排序了。而当把B从10000调到100的时候很快就能跑出来了
     */
   def PercentileOperatorStatistics(): Unit ={
-    val spark = SparkSession.builder().master("local[*]").appName("Basicstatistics").getOrCreate()
+    val spark = SparkSession.builder().appName("Basicstatistics").getOrCreate()
     val df =spark.createDataFrame(Seq(
       (0,10,20),
       (1,11,21),
       (2,12,22),
       (3,13,23)
-    )).toDF("a","b","c")
-
+    )).toDF("a","b","")
     df.createOrReplaceTempView("aaa")
 
     spark.sqlContext.sql("select percentile_approx(cast(a as double),0) as a from aaa").show()
@@ -255,7 +254,9 @@ object Basicstatistics {
 
   def main(args: Array[String]): Unit = {
 //    val spark = SparkSession.builder().master("local[*]").appName("Basicstatistics").getOrCreate()
-//    llss()
+//       df = spark.createDataFrame(data, ["label", "features"])
+    PercentileOperatorStatistics
+    //    llss()
 
   }
 }

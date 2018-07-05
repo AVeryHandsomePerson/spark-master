@@ -13,6 +13,7 @@
         <encoding>UTF-8</encoding>
         <scala.version>2.11.8</scala.version>
         <spark.version>2.2.0</spark.version>
+        <mysql.version>5.1.30</mysql.version>
         <!--<hadoop.version>2.7.2</hadoop.version>-->
         <!--<es.version>2.3.1</es.version>-->
         <elasticsearchSpark.version>5.4.1</elasticsearchSpark.version>
@@ -46,12 +47,30 @@
             <artifactId>spark-streaming_2.11</artifactId>
             <version>${spark.version}</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.springml/spark-sftp -->
+        <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common -->
+        <!--<dependency>-->
+            <!--<groupId>org.apache.hadoop</groupId>-->
+            <!--<artifactId>hadoop-common</artifactId>-->
+            <!--<version>3.1.0</version>-->
+        <!--</dependency>-->
+
+        <!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
         <dependency>
-            <groupId>com.springml</groupId>
-            <artifactId>spark-sftp_2.10</artifactId>
-            <version>1.0.0</version>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>2.9.0</version>
         </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${mysql.version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.springml/spark-sftp -->
+        <!--<dependency>-->
+            <!--<groupId>com.springml</groupId>-->
+            <!--<artifactId>spark-sftp_2.10</artifactId>-->
+            <!--<version>1.0.0</version>-->
+        <!--</dependency>-->
         <!-- https://mvnrepository.com/artifact/com.janeluo/ikanalyzer -->
         <dependency>
             <groupId>com.janeluo</groupId>
@@ -71,37 +90,104 @@
         </dependency>
     </dependencies>
     <build>
-    <sourceDirectory>src/main/scala</sourceDirectory>
-    <testSourceDirectory>src/test/scala</testSourceDirectory>
-    <plugins>
-    <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>3.2.2</version>
-        <executions>
-            <execution>
-                <goals>
-                    <goal>compile</goal>
-                    <goal>testCompile</goal>
-                </goals>
+        <finalName>carenetCollection</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.1</version>
                 <configuration>
-                    <args>
-                        <arg>-make:transitive</arg>
-                        <arg>-dependencyfile</arg>
-                        <arg>${project.build.directory}/.scala_dependencies</arg>
-                    </args>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <compilerVersion>1.8</compilerVersion>
+                    <encoding>UTF-8</encoding>
+                    <excludes>
+                        <exclude>log4j:log4j:jar:</exclude>
+                    </excludes>
                 </configuration>
-            </execution>
-        </executions>
-    </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-                <source>1.8</source>
-                <target>1.8</target>
-            </configuration>
-        </plugin>
-    </plugins>
+            </plugin>
+            <plugin>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <version>2.15.2</version>
+                <executions>
+                    <execution>
+                        <id>scala-compile-first</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>**/*.scala</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <!-- 过滤-->
+                    <excludes>
+                        <exclude>META-INF/*.SF</exclude>
+                        <exclude>META-INF/*.DSA</exclude>
+                        <exclude>META-INF/*.RSA</exclude>
+                        <exclude>core-default.xml</exclude>
+                        <exclude>hdfs-default.xml</exclude>
+                        <exclude>mapred-default.xml</exclude>
+                        <exclude>yarn-default.xml</exclude>
+                        <exclude>input.properties</exclude>
+                    </excludes>
+                    <archive>
+                        <!-- 打包后不包括pom的描述文件 -->
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                        <!-- Maven在生成jar时，并不知道这个jar是lib还是app，所以使用以下这个插件告之MAVEN这个jar为app，指定main类 -->
+                        <manifest>
+                            <mainClass>cn.com.carenet.SaprkCore</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix></classpathPrefix>
+                            <useUniqueVersions>false</useUniqueVersions>
+                        </manifest>
+                        <manifestEntries>
+                            <Class-Path>.</Class-Path>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.4</version>
+                <!--在构建生命周期中执行一组目标的配置。每个目标可能有不同的配置。-->
+                <executions>
+                    <!--execution元素包含了插件执行需要的信息-->
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>
